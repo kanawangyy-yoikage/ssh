@@ -1,50 +1,78 @@
-# Debian SSH Installer
+# Konfigurasi Server Administrasi SSH - Debian
 
-Script Bash sederhana untuk meng-install dan mengaktifkan **OpenSSH Server** di Debian, sehingga VM Debian bisa diremote (SSH) dari Windows host.
+Script otomatisasi untuk studi kasus **Server Administrasi berbasis Debian** yang diakses oleh administrator jaringan melalui SSH dari ruang laboratorium.
 
-## Fitur
+Tugas: SMK Teknologi Nusantara
 
-- Install `openssh-server`
-- Aktifkan service SSH agar auto-start saat boot
-- Buka port 22 di `ufw` (jika terpasang & aktif)
-- Menampilkan IP address VM setelah instalasi selesai
+## 📋 Deskripsi Studi Kasus
 
-## Cara Pakai
+Membangun Server Administrasi Debian dengan konfigurasi:
 
-```bash
-git clone https://github.com/<username>/<nama-repo>.git
-cd <nama-repo>
-chmod +x install-ssh.sh
-sudo ./install-ssh.sh
+- **IP Server**: `200.100.50.1/24`
+- **IP Client**: range `200.100.50.10/24` s.d. `200.100.50.100/24`
+- User yang dibuat: `user5`, `user10`, `user100`
+- File laporan: `laporan-praktik.txt`
+
+## 🔒 Kebijakan Keamanan
+
+| No | Kebijakan | Implementasi |
+|----|-----------|--------------|
+| 1 | SSH tidak menggunakan port default | Port diganti ke `2200` |
+| 2 | Root tidak boleh login langsung | `PermitRootLogin no` |
+| 3 | User yang diizinkan akses hanya user5 & user10 | `AllowUsers` |
+| 4 | user100 login menggunakan SSH key | Generate keypair RSA 4096-bit |
+| 5 | Hanya user dengan SSH key yang bisa login | `PasswordAuthentication no` |
+
+## 📁 Struktur Repository
+
+```
+.
+├── konfigurasi-server-ssh.sh   # Script utama konfigurasi server
+├── laporan-praktik.txt         # Template laporan praktik
+└── README.md                   # Dokumentasi ini
 ```
 
-Setelah selesai, script akan menampilkan IP address VM dan contoh perintah untuk connect dari Windows:
+## 🚀 Cara Penggunaan
 
-```bash
-ssh <username>@<IP_VM>
-```
+1. Clone repository ini ke server Debian:
+   ```bash
+   git clone https://github.com/USERNAME/konfigurasi-server-ssh.git
+   cd konfigurasi-server-ssh
+   ```
 
-## Koneksi dari Windows
+2. Beri izin eksekusi pada script:
+   ```bash
+   chmod +x konfigurasi-server-ssh.sh
+   ```
 
-Windows 10/11 sudah memiliki OpenSSH Client bawaan, jadi cukup buka **PowerShell** atau **CMD** lalu jalankan perintah `ssh` di atas. Alternatif lain bisa pakai [PuTTY](https://www.putty.org/).
+3. Sesuaikan variabel berikut di dalam script sebelum menjalankan:
+   - `INTERFACE` — nama interface jaringan server (cek dengan `ip a`)
+   - `SSH_PORT` — port SSH baru yang diinginkan (default: `2200`)
 
-## Catatan Konfigurasi Jaringan VM
+4. Jalankan script sebagai root:
+   ```bash
+   sudo ./konfigurasi-server-ssh.sh
+   ```
 
-Cara VM diakses dari Windows tergantung jenis network adapter yang dipakai:
+5. Set password untuk masing-masing user:
+   ```bash
+   sudo passwd user5
+   sudo passwd user10
+   ```
 
-| Mode Jaringan | Cara Akses dari Windows |
-|---|---|
-| **NAT** (VirtualBox/VMware) | Tambahkan *port forwarding* (misal host `2222` → guest `22`), lalu `ssh user@127.0.0.1 -p 2222` |
-| **Bridged Adapter** | VM mendapat IP sendiri di jaringan yang sama, langsung `ssh user@<IP_VM>` |
-| **Hyper-V (Default Switch)** | Biasanya bridged secara otomatis, cek IP dengan `ip addr` di dalam VM |
-| **WSL2** | Berbeda dari VM biasa — WSL2 punya mekanisme jaringan sendiri, umumnya sudah bisa diakses lewat `localhost` tanpa perlu setup manual seperti ini |
+6. Salin private key `user100` ke komputer client untuk login SSH key-based:
+   ```bash
+   scp -P 2200 user100@200.100.50.1:/home/user100/.ssh/id_rsa ./user100_key
+   chmod 600 user100_key
+   ssh -i user100_key -p 2200 user100@200.100.50.1
+   ```
 
-## Requirement
+## ⚠️ Catatan
 
-- Debian (10/11/12) atau turunannya
-- Akses `sudo`/root
-- Koneksi internet untuk `apt install`
+- Setelah `PasswordAuthentication no` diterapkan, **hanya login via SSH key** yang berfungsi.
+- Pastikan private key `user100` sudah disalin ke client **sebelum** menutup sesi akses root/console pertama kali, agar tidak terkunci dari server.
+- Edit isi `laporan-praktik.txt` dengan nama kelompok dan nama siswa yang sesuai.
 
-## Lisensi
+## 📄 Lisensi
 
-MIT
+Bebas digunakan untuk keperluan pembelajaran.

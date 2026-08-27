@@ -1,0 +1,14 @@
+# Jangan upload SSH key ke GitHub!
+*.pem
+id_rsa
+id_rsa.pub
+*_key
+*_key.pub
+
+# Backup file konfigurasi
+*.bak
+sshd_config.bak.*
+
+# File sistem
+.DS_Store
+*.log
